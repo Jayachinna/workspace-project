@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Workspace — Comet Dashboard</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons for UI elements -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==================================== */
+        /* === DARK MODE: TRUE BLACK + CEMENT === */
+        /* This is the default style */
+        /* ==================================== */
+        :root {
+            /* Theme Colors (Black) */
+            --bg-primary: #0A0A0A; /* Deeper Black Background */
+            --bg-secondary: #1C1C1C; /* Darker Modal/Control Bar Background */
+            
+            --text-primary: #F0F0F0; /* Brighter White Text */
+            --text-secondary: #B0B0B0; /* Muted Gray Subtext */
+            
+            /* Widget: Dark Cement/Slate Color */
+            --widget-base-color: #383D42; 
+            --widget-bg: rgba(56, 61, 66, 0.85); /* Translucent Cement/Slate Color for widgets */
+
+            /* Accent Color (Vibrant Cyan) */
+            --accent-color: #00FFFF; 
+
+            /* --- Dynamic UI Elements (Dark Mode) --- */
+            --hover-border: 1px solid var(--accent-color); 
+            --hover-shadow: 0 0 10px rgba(0, 255, 255, 0.4); /* Cyan glow */
+            --drag-visual-color: #4A4A4A; /* Dark Gray for drag visual */
+            
+            /* Add Button: Secondary background, Light text (Dark in Dark Mode) */
+            --button-add-bg: var(--bg-secondary); 
+            --button-add-text: var(--text-primary); 
+            --button-add-hover: #333333; 
+            --button-add-border-color: var(--text-primary); /* White border in dark mode */
+            
+            /* Reset Button: Secondary background, White text */
+            --button-reset-bg: var(--bg-secondary); 
+            --button-reset-text: var(--text-primary); /* White text on dark gray */
+            --button-reset-hover: #333333; 
+            
+            /* Toggle checked background (Cyan in Dark Mode) */
+            --toggle-checked-bg: var(--accent-color);
+        }
+        
+        /* ======================================= */
+        /* === LIGHT MODE: DARK BUTTONS ADDED === */
+        /* ======================================= */
+        body.light-mode {
+            --bg-primary: #f0f4f8; /* Very light blue-gray */
+            --bg-secondary: #ffffff; /* White */
+            --text-primary: #172A45; /* Dark Blue Text */
+            --text-secondary: #6c757d; /* Muted Subtext */
+            --widget-bg: #e2e8f0; /* Lightest gray for cards */
+
+            /* --- Dynamic UI Elements (Light Mode) */
+            --hover-border: 1px solid var(--text-primary); 
+            --hover-shadow: 0 0 10px rgba(23, 42, 69, 0.1); 
+            --drag-visual-color: #4A4A4A; /* Dark Gray for drag visual */
+
+            /* Add Button: Near Black background, White text */
+            --button-add-bg: #1A1A1A; 
+            --button-add-text: #ffffff; /* Explicitly White */
+            --button-add-hover: #333333; 
+            --button-add-border-color: #ffffff; /* White border in light mode (against black button) */
+
+            /* Reset Button: Dark Gray background, White text */
+            --button-reset-bg: #4A4A4A; 
+            --button-reset-text: #ffffff; /* Explicitly White */
+            --button-reset-hover: #1A1A1A; 
+            
+            /* Toggle checked background (Dark in Light Mode) */
+            --toggle-checked-bg: var(--button-add-bg);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.4s, color 0.4s;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 5vh;
+        }
+
+        .widget-card {
+            background-color: var(--widget-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: grab;
+            height: 100%;
+        }
+        .widget-card:hover {
+            border: var(--hover-border);
+            box-shadow: var(--hover-shadow);
+            transform: translateY(-2px);
+        }
+        .widget-card:active {
+            cursor: grabbing;
+        }
+        
+        .drag-over-visual {
+            /* Now using a consistently dark gray color for drag visuals */
+            border: 2px dashed var(--drag-visual-color) !important;
+            background-color: var(--widget-bg) !important; 
+            transform: scale(0.98) !important;
+        }
+
+        .logo-image {
+            width: 4rem;
+            height: 4rem;
+            object-fit: contain;
+        }
+
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--bg-secondary);
+        }
+        
+        input:not([type="checkbox"]) {
+            background-color: var(--bg-secondary) !important;
+            border-color: var(--text-secondary) !important;
+            color: var(--text-primary) !important;
+            /* New dark focus ring */
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        input:not([type="checkbox"]):focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 2px #333333; /* Dark gray/black ring on focus */
+            border-color: #333333; /* Dark border on focus */
+        }
+
+
+        /* Responsive Grid: 2 cols mobile, 3 tablet, 4 desktop, 5 large */
+        .widget-grid {
+            display: grid;
+            gap: 1.5rem; /* gap-6 */
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            max-width: 100%;
+        }
+        @media (min-width: 640px) {
+            .widget-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        @media (min-width: 1024px) {
+            .widget-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+        @media (min-width: 1280px) {
+            .widget-grid {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="w-full max-w-7xl">
+        <!-- Welcome Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-extrabold mb-2" style="color: var(--text-primary);">Welcome to My Workspace</h1>
+            <p class="text-md sm:text-xl" style="color: var(--text-secondary);">Your personalized space for quick access.</p>
+        </header>
+
+        <!-- Control Bar (Semi-transparent and blurred in Dark Mode) -->
+        <div class="flex flex-col sm:flex-row justify-between items-center bg-[var(--bg-secondary)] bg-opacity-40 p-4 rounded-xl mb-12 border border-[var(--text-secondary)]/50 backdrop-blur-sm" id="controlBar">
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mb-4 sm:mb-0">
+                <!-- Add Widget Button (White border, black focus ring) -->
+                <button onclick="showAddWidgetModal()" 
+                    class="flex items-center justify-center px-4 py-2 font-semibold rounded-lg transition duration-150 shadow-md border focus:outline-none focus:ring-4 focus:ring-gray-900 focus:ring-opacity-50"
+                    style="background-color: var(--button-add-bg); color: var(--button-add-text); border-color: var(--button-add-border-color);"
+                    onmouseover="this.style.backgroundColor=getComputedStyle(document.body).getPropertyValue('--button-add-hover')"
+                    onmouseout="this.style.backgroundColor=getComputedStyle(document.body).getPropertyValue('--button-add-bg')">
+                    <i data-lucide="plus" class="w-5 h-5 mr-2" style="color: var(--button-add-text);"></i> Add Widget
+                </button>
+                
+                <!-- Reset Dashboard Button (Black focus ring for consistency) -->
+                <button onclick="confirmReset()" 
+                    class="flex items-center justify-center px-4 py-2 font-semibold rounded-lg transition duration-150 shadow-md border border-[var(--text-secondary)] focus:outline-none focus:ring-4 focus:ring-gray-900 focus:ring-opacity-50"
+                    style="background-color: var(--button-reset-bg); color: var(--button-reset-text);"
+                    onmouseover="this.style.backgroundColor=getComputedStyle(document.body).getPropertyValue('--button-reset-hover')"
+                    onmouseout="this.style.backgroundColor=getComputedStyle(document.body).getPropertyValue('--button-reset-bg')">
+                    <i data-lucide="refresh-cw" class="w-5 h-5 mr-2" style="color: var(--button-reset-text);"></i> Reset Dashboard
+                </button>
+            </div>
+
+            <!-- Dark/Light Mode Toggle -->
+            <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+                <i data-lucide="sun" class="w-6 h-6 text-yellow-400"></i>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="themeToggle" value="" class="sr-only peer" onchange="toggleTheme()">
+                    <!-- Updated peer-focus ring to gray-900 (dark) -->
+                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-900 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[var(--toggle-checked-bg)]"></div>
+                </label>
+                <i data-lucide="moon" class="w-6 h-6 text-gray-400"></i>
+            </div>
+        </div>
+
+        <!-- Widget Grid -->
+        <div id="widgetGrid" class="widget-grid justify-center mx-auto">
+            <!-- Widgets will be injected here -->
+        </div>
+
+        <!-- Message Box/Toast Area -->
+        <div id="messageBox" class="fixed bottom-4 right-4 p-4 rounded-lg shadow-xl text-white hidden z-50 transition-opacity duration-300"></div>
+    </div>
+
+    <!-- Modal for Add/Edit Widget -->
+    <div id="widgetModal" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="modal-content w-full max-w-lg rounded-xl shadow-2xl p-6 transform transition-all duration-300">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-4" style="color: var(--text-primary);">Add New Widget</h2>
+            
+            <form id="widgetForm" onsubmit="saveWidget(event)">
+                <input type="hidden" id="widgetId" value="">
+                
+                <div class="mb-4">
+                    <label for="widgetName" class="block text-sm font-medium" style="color: var(--text-secondary);">Widget Name</label>
+                    <!-- Removed focus-ring-[var(--drag-visual-color)] and will rely on new CSS styles -->
+                    <input type="text" id="widgetName" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm sm:text-sm" placeholder="e.g., YouTube">
+                </div>
+                
+                <div class="mb-6">
+                    <label for="widgetUrl" class="block text-sm font-medium" style="color: var(--text-secondary);">URL (e.g., https://example.com)</label>
+                    <!-- Removed focus-ring-[var(--drag-visual-color)] and will rely on new CSS styles -->
+                    <input type="url" id="widgetUrl" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm sm:text-sm" placeholder="https://">
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideModal('widgetModal')" class="px-4 py-2 text-sm font-medium rounded-lg text-gray-400 border border-gray-600 hover:bg-gray-700 hover:text-white transition duration-150">Cancel</button>
+                    <!-- Modal Save Button (Black focus ring) -->
+                    <button type="submit" id="saveButton" 
+                        class="px-4 py-2 text-sm font-medium rounded-lg transition duration-150 focus:outline-none focus:ring-4 focus:ring-gray-900 focus:ring-opacity-50"
+                        style="background-color: var(--button-add-bg); color: var(--button-add-text);"
+                        onmouseover="this.style.backgroundColor=getComputedStyle(document.body).getPropertyValue('--button-add-hover')"
+                        onmouseout="this.style.backgroundColor=getComputedStyle(document.body).getPropertyValue('--button-add-bg')">Save Widget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal for Reset -->
+    <div id="resetModal" class="modal-overlay fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="modal-content w-full max-w-sm rounded-xl shadow-2xl p-6 transform transition-all duration-300">
+            <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">Confirm Reset</h2>
+            <p class="mb-6" style="color: var(--text-secondary);">Are you sure you want to reset the dashboard? This will remove all custom widgets and restore the default 20.</p>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideModal('resetModal')" class="px-4 py-2 text-sm font-medium rounded-lg text-gray-400 border border-gray-600 hover:bg-gray-700 hover:text-white transition duration-150">Cancel</button>
+                <!-- Modal Reset Now Button (Black focus ring) -->
+                <button type="button" onclick="resetDashboard()" 
+                    class="px-4 py-2 text-sm font-medium rounded-lg transition duration-150 border border-[var(--text-secondary)] focus:outline-none focus:ring-4 focus:ring-gray-900 focus:ring-opacity-50"
+                    style="background-color: var(--button-reset-bg); color: var(--button-reset-text);"
+                    onmouseover="this.style.backgroundColor=getComputedStyle(document.body).getPropertyValue('--button-reset-hover')"
+                    onmouseout="this.style.backgroundColor=getComputedStyle(document.body).getPropertyValue('--button-reset-bg')">Reset Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'myWorkspaceWidgets_V3'; 
+        const THEME_KEY = 'myWorkspaceTheme';
+        let currentWidgets = [];
+        let draggedWidgetId = null; 
+
+        // --- Logo and Data Utilities ---
+
+        function generateId() {
+            return 'w_' + Date.now() + Math.random().toString(16).slice(2);
+        }
+
+        function getLogoUrl(url, name) {
+            try {
+                const urlObject = new URL(url);
+                const domain = urlObject.hostname.replace('www.', '');
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+            } catch (e) {
+                const initial = name.charAt(0).toUpperCase();
+                const hash = initial.charCodeAt(0) % 6;
+                let color = '2563EB/FFFFFF'; 
+                switch (hash) {
+                    case 0: color = 'EF4444/FFFFFF'; break;
+                    case 1: color = '10B981/FFFFFF'; break; 
+                    case 2: color = '3B82F6/FFFFFF'; break;
+                    case 3: color = 'F59E0B/FFFFFF'; break;
+                    case 4: color = '8B5CF6/FFFFFF'; break;
+                    case 5: color = 'EC4899/FFFFFF'; break;
+                }
+                return `https://placehold.co/128x128/${color}?text=${initial}`;
+            }
+        }
+
+        function getDefaultWidgets() {
+            const defaults = [
+                { name: "YouTube", url: "https://www.youtube.com", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/1024px-YouTube_full-color_icon_%282017%29.svg.png" },
+                { name: "Naukri", url: "https://www.naukri.com" },
+                { name: "LinkedIn", url: "https://www.linkedin.com" },
+                { name: "Instagram", url: "https://www.instagram.com", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" },
+                { name: "WhatsApp", url: "https://web.whatsapp.com", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1024px-WhatsApp.svg.png" }, 
+                { name: "X (Twitter)", url: "https://x.com", logo: "https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg" },
+                { name: "Gmail", url: "https://mail.google.com", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/1024px-Gmail_icon_%282020%29.svg.png" }, 
+                { name: "ChatGPT", url: "https://chat.openai.com" },
+                { name: "Perplexity", url: "https://www.perplexity.ai" },
+                { name: "Gemini AI", url: "https://gemini.google.com" },
+                { name: "GitHub", url: "https://github.com", logo: "https://cdn-icons-png.flaticon.com/512/25/25231.png" },
+                { name: "Netlify", url: "https://www.netlify.com" },
+                { name: "Telegram", url: "https://web.telegram.org", logo: "https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" },
+                { name: "Netflix", url: "https://www.netflix.com", logo: "https://cdn-icons-png.flaticon.com/512/870/870910.png" },
+                { name: "Spotify", url: "https://www.spotify.com", logo: "https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg" },
+                { name: "Amazon", url: "https://www.amazon.in", logo: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Amazon_icon.svg" },
+                { name: "Myntra", url: "https://www.myntra.com" },
+                { name: "Reddit", url: "https://www.reddit.com", logo: "https://i.postimg.cc/yx0sGZqr/reddit.png" },
+                { name: "Drive", url: "https://drive.google.com", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/1024px-Google_Drive_icon_%282020%29.svg.png" },
+                { name: "Excel", url: "https://www.office.com/launch/excel", logo: "https://i.postimg.cc/Ghkm7ZdD/excel.png" } 
+            ];
+
+            return defaults.map(widget => ({
+                id: generateId(),
+                name: widget.name,
+                url: widget.url,
+                logo: widget.logo || getLogoUrl(widget.url, widget.name) 
+            }));
+        }
+
+        // --- Storage and Theme Handlers ---
+
+        function loadWidgets() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                currentWidgets = JSON.parse(stored);
+            } else {
+                currentWidgets = getDefaultWidgets();
+                saveWidgets();
+            }
+            renderWidgets();
+        }
+
+        function saveWidgets() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(currentWidgets));
+        }
+
+        function toggleTheme() {
+            // Checkbox checked = light mode
+            const isLight = document.getElementById('themeToggle').checked;
+            document.body.classList.toggle('light-mode', isLight);
+            
+            // Adjust control bar background visibility
+            const controlBar = document.getElementById('controlBar');
+            if (isLight) {
+                // Light mode: solid background, no blur, show shadow
+                controlBar.classList.remove('bg-opacity-40', 'backdrop-blur-sm');
+                controlBar.classList.add('shadow-lg'); 
+            } else {
+                // Dark mode: semi-transparent background, blur, no shadow
+                controlBar.classList.add('bg-opacity-40', 'backdrop-blur-sm');
+                controlBar.classList.remove('shadow-lg'); 
+            }
+
+            // Save the theme preference
+            localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
+            
+            // Re-render icons to ensure color updates properly
+            lucide.createIcons();
+        }
+
+        function initTheme() {
+            // Default theme is explicitly 'dark' (Black Mode)
+            const savedTheme = localStorage.getItem(THEME_KEY) || 'dark'; 
+            const toggle = document.getElementById('themeToggle');
+            const controlBar = document.getElementById('controlBar');
+
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                toggle.checked = true;
+                // Ensure correct light mode style on load
+                controlBar.classList.remove('bg-opacity-40', 'backdrop-blur-sm');
+            } else {
+                // Initializing to Dark Mode (Black Mode)
+                document.body.classList.remove('light-mode');
+                toggle.checked = false; // Ensure toggle is unchecked for dark mode
+                // Ensure correct dark mode style on load
+                controlBar.classList.add('bg-opacity-40', 'backdrop-blur-sm');
+                // Ensure the 'dark' setting is saved if it wasn't there initially
+                localStorage.setItem(THEME_KEY, 'dark');
+            }
+        }
+
+
+        // --- Drag & Drop Handlers ---
+
+        function dragStart(e) {
+            draggedWidgetId = e.currentTarget.id.replace('widget-', '');
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => {
+                const sourceCard = e.currentTarget;
+                if (sourceCard) sourceCard.style.opacity = '0.3';
+            }, 0);
+        }
+        
+        function dragOver(e) {
+            e.preventDefault(); 
+            e.dataTransfer.dropEffect = 'move';
+            
+            const targetCard = e.currentTarget;
+            if (targetCard.id !== `widget-${draggedWidgetId}` && !targetCard.classList.contains('drag-over-visual')) {
+                targetCard.classList.add('drag-over-visual');
+            }
+        }
+        
+        function dragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over-visual');
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            const targetCard = e.currentTarget;
+            targetCard.classList.remove('drag-over-visual');
+            
+            if (!draggedWidgetId) return;
+
+            const droppedOverWidgetId = targetCard.id.replace('widget-', '');
+            const sourceId = draggedWidgetId;
+            
+            const sourceCard = document.getElementById(`widget-${sourceId}`);
+            if (sourceCard) sourceCard.style.opacity = '1';
+
+            if (sourceId === droppedOverWidgetId) {
+                draggedWidgetId = null;
+                return;
+            }
+
+            const sourceIndex = currentWidgets.findIndex(w => w.id === sourceId);
+            const targetIndex = currentWidgets.findIndex(w => w.id === droppedOverWidgetId);
+
+            if (sourceIndex > -1 && targetIndex > -1) {
+                const [draggedWidget] = currentWidgets.splice(sourceIndex, 1);
+                currentWidgets.splice(targetIndex, 0, draggedWidget);
+
+                saveWidgets();
+                renderWidgets();
+                showMessageBox(`Widget "${draggedWidget.name}" moved.`, 'success');
+            }
+            
+            draggedWidgetId = null;
+        }
+        
+
+        // --- UI Rendering ---
+
+        function renderWidgets() {
+            const grid = document.getElementById('widgetGrid');
+            grid.innerHTML = ''; 
+
+            currentWidgets.forEach(widget => {
+                const card = document.createElement('div');
+                card.id = `widget-${widget.id}`;
+                // Aspect ratio and padding for a clean look
+                card.className = 'widget-card p-6 rounded-2xl flex flex-col items-center justify-between text-center group relative aspect-square';
+                
+                // ADDED DRAG ATTRIBUTES
+                card.setAttribute('draggable', 'true');
+                card.setAttribute('ondragstart', 'dragStart(event)');
+                card.setAttribute('ondragover', 'dragOver(event)');
+                card.setAttribute('ondragleave', 'dragLeave(event)');
+                card.setAttribute('ondrop', 'drop(event)');
+                
+                // Use a wrapper div for the main clickable area
+                const clickableArea = document.createElement('div');
+                clickableArea.className = 'flex flex-col items-center justify-center w-full h-full cursor-pointer'; 
+                clickableArea.setAttribute('onclick', `openUrl('${widget.url}')`);
+                
+
+                clickableArea.innerHTML = `
+                    <img src="${widget.logo}" alt="${widget.name} logo" class="logo-image mb-4 rounded-full object-cover">
+                    <p class="text-lg font-semibold truncate w-full px-1" style="color: var(--text-primary);">${widget.name}</p>
+                `;
+                card.appendChild(clickableArea);
+
+
+                // Hover-based Menu (Options)
+                const optionsMenu = document.createElement('div');
+                optionsMenu.className = 'absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10';
+                optionsMenu.innerHTML = `
+                    <button onclick="event.stopPropagation(); toggleMenu('${widget.id}')" class="p-1 rounded-full text-white bg-gray-800 bg-opacity-70 hover:bg-opacity-90 transition duration-150" aria-label="Widget options">
+                        <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                    </button>
+                    
+                    <!-- Menu Options (Initially hidden) -->
+                    <div id="menu-${widget.id}" class="absolute right-0 mt-1 w-32 bg-[var(--bg-secondary)] rounded-lg shadow-xl py-1 hidden z-20 border border-gray-700">
+                        <button onclick="event.stopPropagation(); showEditWidgetModal('${widget.id}')" class="w-full text-left px-3 py-2 text-sm text-[var(--text-primary)] hover:bg-gray-700 hover:text-white flex items-center">
+                            <i data-lucide="edit" class="w-4 h-4 mr-2"></i> Edit
+                        </button>
+                        <button onclick="event.stopPropagation(); removeWidget('${widget.id}')" class="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-600 hover:text-white flex items-center">
+                            <i data-lucide="trash" class="w-4 h-4 mr-2"></i> Remove
+                        </button>
+                    </div>
+                `;
+                card.appendChild(optionsMenu);
+                grid.appendChild(card);
+            });
+            
+            // Re-render lucide icons after injecting HTML
+            lucide.createIcons();
+        }
+
+        function showMessageBox(message, type) {
+            const box = document.getElementById('messageBox');
+            box.textContent = message;
+            box.className = 'fixed bottom-4 right-4 p-4 rounded-lg shadow-xl text-white z-50 transition-opacity duration-300';
+            
+            if (type === 'success') {
+                box.classList.add('bg-green-600');
+            } else if (type === 'error') {
+                box.classList.add('bg-red-600');
+            } else {
+                box.classList.add('bg-gray-700');
+            }
+            
+            box.classList.remove('hidden');
+
+            setTimeout(() => {
+                box.classList.add('hidden');
+            }, 3000);
+        }
+
+        // --- Modals and Actions ---
+
+        function showModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function toggleMenu(id) {
+            // Close all other menus first
+            document.querySelectorAll('[id^="menu-"]').forEach(menu => {
+                if (menu.id !== `menu-${id}`) {
+                    menu.classList.add('hidden');
+                }
+            });
+
+            const menu = document.getElementById(`menu-${id}`);
+            menu.classList.toggle('hidden');
+        }
+
+        function openUrl(url) {
+            // Ensure URL has a protocol
+            const finalUrl = url.startsWith('http') ? url : `https://${url}`;
+            window.open(finalUrl, '_blank');
+        }
+
+        function showAddWidgetModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Widget';
+            document.getElementById('widgetId').value = '';
+            document.getElementById('widgetName').value = '';
+            document.getElementById('widgetUrl').value = '';
+            document.getElementById('saveButton').textContent = 'Add Widget';
+            showModal('widgetModal');
+        }
+
+        function showEditWidgetModal(id) {
+            const widget = currentWidgets.find(w => w.id === id);
+            if (!widget) return;
+
+            document.getElementById('modalTitle').textContent = `Edit Widget: ${widget.name}`;
+            document.getElementById('widgetId').value = id;
+            document.getElementById('widgetName').value = widget.name;
+            document.getElementById('widgetUrl').value = widget.url;
+            document.getElementById('saveButton').textContent = 'Save Changes';
+            document.querySelectorAll('[id^="menu-"]').forEach(menu => menu.classList.add('hidden'));
+            showModal('widgetModal');
+        }
+
+        function saveWidget(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('widgetId').value;
+            const name = document.getElementById('widgetName').value.trim();
+            const url = document.getElementById('widgetUrl').value.trim();
+            let isEditing = !!id;
+
+            if (isEditing) {
+                // Edit existing widget
+                const index = currentWidgets.findIndex(w => w.id === id);
+                if (index !== -1) {
+                    currentWidgets[index].name = name;
+                    currentWidgets[index].url = url;
+                    // Re-generate logo based on new URL/name (uses generic logic for user-added widgets)
+                    currentWidgets[index].logo = currentWidgets[index].logo.startsWith('https://placehold.co/') ? getLogoUrl(url, name) : currentWidgets[index].logo;
+                    showMessageBox('Widget updated successfully!', 'success');
+                }
+            } else {
+                // Add new widget
+                const newWidget = {
+                    id: generateId(),
+                    name: name,
+                    url: url,
+                    logo: getLogoUrl(url, name)
+                };
+                currentWidgets.push(newWidget);
+                showMessageBox('New widget added successfully!', 'success');
+            }
+
+            saveWidgets();
+            renderWidgets();
+            hideModal('widgetModal');
+        }
+
+        function removeWidget(id) {
+            currentWidgets = currentWidgets.filter(w => w.id !== id);
+            saveWidgets();
+            renderWidgets();
+            showMessageBox('Widget removed successfully!', 'success');
+        }
+
+        function confirmReset() {
+            showModal('resetModal');
+        }
+
+        function resetDashboard() {
+            currentWidgets = getDefaultWidgets();
+            saveWidgets();
+            renderWidgets();
+            hideModal('resetModal');
+            showMessageBox('Dashboard successfully reset to defaults!', 'success');
+        }
+
+        // --- Initialization ---
+
+        window.onload = function() {
+            initTheme();
+            loadWidgets();
+            // Close menu/modal on outside click
+            document.addEventListener('click', (e) => {
+                // Close floating menus if clicked outside
+                document.querySelectorAll('[id^="menu-"]').forEach(menu => {
+                    if (!menu.classList.contains('hidden') && !e.target.closest('.widget-card')) {
+                        menu.classList.add('hidden');
+                    }
+                });
+                
+                // Close modals if click is on the overlay (and not the content)
+                if (e.target.id === 'widgetModal' || e.target.id === 'resetModal') {
+                    hideModal(e.target.id);
+                }
+            });
+        };
+    </script>
+</body>
+</html>
